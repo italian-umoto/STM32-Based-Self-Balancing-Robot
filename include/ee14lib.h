@@ -74,6 +74,7 @@ bool i2c_write(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* da
 bool i2c_read(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* data, unsigned char len);
 
 // MPU Helper Functions
-int mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA, int MPU_ADDRESS);
-void mpu_read(I2C_TypeDef* I2C, EE14Lib_Pin SCL, EE14Lib_Pin SDA, int MPU_ADDRESS, int output[3]);
+void mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA);
+void mpu_read(I2C_TypeDef* I2C, EE14Lib_Pin SCL, EE14Lib_Pin SDA, int output[3]);
+void gyro_calibrate(const int samples);
 #endif
