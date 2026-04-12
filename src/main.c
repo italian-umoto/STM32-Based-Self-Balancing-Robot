@@ -5,8 +5,6 @@ const EE14Lib_Pin MPU_SCL = D1;
 const EE14Lib_Pin MPU_SDA = D0;
 const uint8_t MPU_ADDRESS = 0x68;
 
-static 
-
 int _write(int file, char *data, int len) {
     serial_write(USART2, data, len);
     return len;
