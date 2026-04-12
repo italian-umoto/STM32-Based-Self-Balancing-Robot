@@ -72,4 +72,8 @@ char serial_read(USART_TypeDef *USARTx);
 EE14Lib_Err i2c_init(I2C_TypeDef* i2c, EE14Lib_Pin scl, EE14Lib_Pin sda);
 bool i2c_write(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* data, unsigned char len);
 bool i2c_read(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* data, unsigned char len);
+
+// MPU Helper Functions
+int mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA, int MPU_ADDRESS);
+void mpu_read(I2C_TypeDef* I2C, EE14Lib_Pin SCL, EE14Lib_Pin SDA, int MPU_ADDRESS, int output[3]);
 #endif

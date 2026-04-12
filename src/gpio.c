@@ -12,7 +12,7 @@ static GPIO_TypeDef * g_GPIO_port[VCP_RX+1] = {
 };
 
 // Mapping of Nucleo pin number to GPIO pin
-// Using this plust g_GPIO_port[] above, we can translate a Nucleo pin name into
+// Using this plus g_GPIO_port[] above, we can translate a Nucleo pin name into
 // the chip's actual GPIO port and pin number.
 static uint8_t g_GPIO_pin[VCP_RX+1] = {
   0,1,3,4,    // A0=PA0,A1=PA1,A2=PA3,A3=PA4
@@ -36,6 +36,36 @@ static void gpio_enable_port (GPIO_TypeDef *gpio) {
     RCC->AHB2ENR |= field; // Turn on the GPIO clock
 }
 
+/**
+ * Configure a GPIO pin for one of its "alternate functions".  See Tables 15 and
+ * 16 of the STM32L432KC datasheet for a complete listing of the alternate
+ * functions for each pin.
+ *
+ * :param pin: A Nucleo pin ID (D2, A4, etc.)
+ * :param function: an integer 0-15 to select the alternate function
+ * :return: Always returns EE14Lib_Err_OK; in the future this may return errors for
+ *   invalid configurations.
+ */
+EE14Lib_Err gpio_config_alternate_function(EE14Lib_Pin pin, unsigned int function)
+{
+    GPIO_TypeDef* port = g_GPIO_port[pin];
+    uint8_t pin_offset = g_GPIO_pin[pin];
+
+    // Enable the GPIO port in case it hasn't been already
+    gpio_enable_port(port);
+
+    // Set the GPIO pin mode to "alternate function" (0b10)
+    port->MODER &= ~(0b11 << pin_offset*2); // Clear both bits
+    port->MODER |=  (0b10 << pin_offset*2); // 0b10 = alternate function mode
+
+    // Set the AFR register
+    unsigned int afr_offset = pin_offset * 4; // 4 bits per pin -> value from 0 to 60
+
+    port->AFR[afr_offset >> 5] &= ~(0xF << (0x1F & afr_offset));
+    port->AFR[afr_offset >> 5] |=  (function << (0x1F & afr_offset));
+
+    return EE14Lib_Err_OK;
+}
 
 // Configure the direction for a given GPIO pin
 //   pin: A Nucleo pin ID (D2, A4, etc.)
@@ -83,30 +113,43 @@ EE14Lib_Err gpio_config_pullup(EE14Lib_Pin pin, unsigned int mode)
     return EE14Lib_Err_OK;
 }
 
-// Configure a GPIO pin for one of its "alternate functions".  See Tables 15 and
-// 16 of the STM32L432KC datasheet for a complete listing of the alternate
-// functions for each pin.
+// Configure the output type of a GPIO pin, either push/pull or open-drain.
+// A push-pull output is driven both high and low (connection to Vdd or GND),
+// while an open-drain input is driven only to ground, and left floating
+// otherwise.  A pullup (internal or external) is used to achieve the high value
+// when the output is not driven low.
 //   pin: A Nucleo pin ID (D2, A4, etc.)
-//   function: an integer 0-15 to select the alternate function
-// Always returns EE14Lib_Err_OK; in the future this may return errors for
-// invalid configurations.
-EE14Lib_Err gpio_config_alternate_function(EE14Lib_Pin pin, unsigned int function)
+//   otype: Either PUSH_PULL (0b0) or OPEN_DRAIN (0b01)
+// Returns EE14Lib_ERR_INVALID_CONFIG for invalid otype value, otherwise
+// returns EE14Lib_Err_OK.
+EE14Lib_Err gpio_config_otype(EE14Lib_Pin pin, unsigned int otype)
 {
     GPIO_TypeDef* port = g_GPIO_port[pin];
     uint8_t pin_offset = g_GPIO_pin[pin];
 
-    // Enable the GPIO port in case it hasn't been already
-    gpio_enable_port(port);
+    if(otype & ~0b1UL){ // Only bottom bit is valid
+        return EE14Lib_ERR_INVALID_CONFIG;
+    }
 
-    // Set the GPIO pin mode to "alternate function" (0b10)
-    port->MODER &= ~(0b11 << pin_offset*2); // Clear both bits
-    port->MODER |=  (0b10 << pin_offset*2); // 0b10 = alternate function mode
+    port->OTYPER &= ~(0b1 << pin_offset); // Clear mode bit
+    port->OTYPER |=  (otype << pin_offset);
 
-    // Set the AFR register
-    unsigned int afr_offset = pin_offset * 4; // 4 bits per pin -> value from 0 to 60
+    return EE14Lib_Err_OK;
+}
 
-    port->AFR[afr_offset >> 5] &= ~(0xF << (0x1F & afr_offset));
-    port->AFR[afr_offset >> 5] |=  (function << (0x1F & afr_offset));
+
+// Configure the output speed of a GPIO pin.
+EE14Lib_Err gpio_config_ospeed(EE14Lib_Pin pin, unsigned int ospeed)
+{
+    GPIO_TypeDef* port = g_GPIO_port[pin];
+    uint8_t pin_offset = g_GPIO_pin[pin];
+
+    if(ospeed & ~0b11UL){ // Only bottom two bits are valid
+        return EE14Lib_ERR_INVALID_CONFIG;
+    }
+
+    port->OSPEEDR &= ~(0b11 << pin_offset*2); // Clear both speed bits
+    port->OSPEEDR |=  (ospeed << pin_offset*2);
 
     return EE14Lib_Err_OK;
 }
