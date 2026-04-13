@@ -1,16 +1,19 @@
 #include "ee14lib.h"
 #include <stdio.h>
+#include <math.h>
 
 // IMU Pins
 const EE14Lib_Pin MPU_SCL = D1;
 const EE14Lib_Pin MPU_SDA = D0;
 
 volatile uint32_t SysTick_Triggered = 0;
- 
-float actual_theta = 0;
 
-static int GYRO_DATA[3];
-static int ACCL_DATA[3];
+float actual_theta = 0.0f;
+
+static int16_t RAW_GYRO_DATA;
+static int16_t RAW_ACCL_DATA[2];
+
+float alpha = 0.75f;
 
 int _write(int file, char *data, int len) {
     serial_write(USART2, data, len);
@@ -23,30 +26,45 @@ int main() {
     SysTick_initialize();
     mpu_init(MPU_SCL, MPU_SDA);
 
-    // uint32_t last_time = SysTick_Triggered;
+    const uint32_t dt_ms = 10;
+    const float dt_s = dt_ms / 1000.0f;
 
-    while(1) {
+    // Initial accelerometer angle estimate
+    accel_read(I2C1, 0, 2, RAW_ACCL_DATA);   // X and Z
+    float ax = RAW_ACCL_DATA[0] / 16384.0f;
+    float az = RAW_ACCL_DATA[1] / 16384.0f;
 
-        gyro_read(I2C1, GYRO_DATA);
-        accel_read(I2C1, ACCL_DATA);
+    // In degrees
+    actual_theta = atan2f(ax, az) * 180.0f / 3.1415926f;
 
-        printf("%d, %d, %d\n", ACCL_DATA[0], ACCL_DATA[1], ACCL_DATA[2]);
+    while (1) {
+        uint32_t start = SysTick_Triggered;
 
-        // uint32_t current_time = SysTick_Triggered;
-        // float dt = (current_time - last_time) / 1000.0f;
-        // last_time = current_time;
+        // Read sensors
+        RAW_GYRO_DATA = gyro_read(I2C1, 1);       // Y axis gyro
+        accel_read(I2C1, 0, 2, RAW_ACCL_DATA);    // X and Z accel
 
-        // actual_theta += GYRO_DATA[1] * dt;
+        // Convert gyro to deg/s
+        float GYRO_OMEGA = RAW_GYRO_DATA / 131.0f;
 
-        // int whole = (int)actual_theta;
-        // int frac = (int)((actual_theta - whole) * 1000);
+        // Convert accel to g
+        ax = RAW_ACCL_DATA[0] / 16384.0f;
+        az = RAW_ACCL_DATA[1] / 16384.0f;
 
-        // if (frac < 0) frac = -frac;
+        // Accelerometer angle in degrees
+        float ACCL_ANGLE = atan2f(ax, az) * 180.0f / 3.1415926f;
 
-        // printf("%d.%03d\n", whole, frac);
+        // Complementary filter
+        actual_theta = alpha * (actual_theta + GYRO_OMEGA * dt_s) + (1.0f - alpha) * ACCL_ANGLE;
 
+        // Print without %f
+        int whole = (int)actual_theta;
+        int frac = (int)((actual_theta - whole) * 100);
+        if (frac < 0) frac = -frac;
+        printf("%d.%02d\n", whole, frac);
+
+        while (SysTick_Triggered - start < dt_ms) {}
     }
-
 }
 
 // Setup 1ms delay

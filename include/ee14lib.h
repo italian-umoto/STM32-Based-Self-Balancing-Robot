@@ -79,7 +79,8 @@ bool i2c_read(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* dat
 
 // MPU Helper Functions
 void mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA);
-void gyro_read(I2C_TypeDef* I2C, int output[3]);
+int16_t gyro_read(I2C_TypeDef* I2C, int dimension);
 void gyro_calibrate(const int samples);
-void accel_read(I2C_TypeDef* I2C, int output[3]);
+void accel_read(I2C_TypeDef* I2C, int dimension1, int dimension2, int16_t output[2]);
+
 #endif
