@@ -21,7 +21,7 @@ void mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA) {
     buf[1] = 0b00 << 3;
     i2c_write(I2C1, MPU_ADDRESS, buf, 2);
 
-    gyro_calibrate(500);
+    // gyro_calibrate(500);
 
 }
 
@@ -83,4 +83,29 @@ void accel_read(I2C_TypeDef* I2C, int dimension1, int dimension2, int16_t output
 
     output[0] = values[dimension1];
     output[1] = values[dimension2];
+}
+
+// Read gyro axis and return deg/s
+float gyro_rate_dps(I2C_TypeDef* I2C, int dimension) {
+    int16_t raw = gyro_read(I2C, dimension);
+    return raw / 131.0f;
+}
+
+// Read two accel axes and return tilt angle in degrees
+float accel_angle_deg(I2C_TypeDef* I2C, int dimension1, int dimension2) {
+    int16_t raw_data[2];
+    accel_read(I2C, dimension1, dimension2, raw_data);
+
+    float a1 = raw_data[0] / 16384.0f;
+    float a2 = raw_data[1] / 16384.0f;
+
+    return atan2f(a1, a2) * 180.0f / 3.1415926f;
+}
+
+// Print float without %f
+void print_degree_usart(float value) {
+    int whole = (int)value;
+    int frac = (int)((value - whole) * 100);
+    if (frac < 0) frac = -frac;
+    printf("%d.%02d\n", whole, frac);
 }

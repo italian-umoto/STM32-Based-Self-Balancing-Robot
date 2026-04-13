@@ -82,5 +82,8 @@ void mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA);
 int16_t gyro_read(I2C_TypeDef* I2C, int dimension);
 void gyro_calibrate(const int samples);
 void accel_read(I2C_TypeDef* I2C, int dimension1, int dimension2, int16_t output[2]);
+float gyro_rate_dps(I2C_TypeDef* I2C, int dimension);
+float accel_angle_deg(I2C_TypeDef* I2C, int dimension1, int dimension2);
+void print_degree_usart(float value);
 
 #endif

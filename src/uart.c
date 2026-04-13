@@ -5,6 +5,11 @@
  */
 #include "ee14lib.h"
 
+int _write(int file, char *data, int len) {
+    serial_write(USART2, data, len);
+    return len;
+}
+
 /**
  * Configure either USART with the "normal" defaults:
  * Set for 8 data bits, 1 start & 1 stop bit, 16x oversampling
