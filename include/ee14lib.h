@@ -68,6 +68,10 @@ void serial_write(USART_TypeDef *USARTx, const char *buffer, int len);
 // Spin wait until we have a byte.
 char serial_read(USART_TypeDef *USARTx);
 
+// SysTick Functions
+void SysTick_initialize(void);
+void  SysTick_Handler(void);
+void delay_ms(uint32_t ms);
 
 EE14Lib_Err i2c_init(I2C_TypeDef* i2c, EE14Lib_Pin scl, EE14Lib_Pin sda);
 bool i2c_write(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* data, unsigned char len);
@@ -75,6 +79,7 @@ bool i2c_read(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* dat
 
 // MPU Helper Functions
 void mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA);
-void mpu_read(I2C_TypeDef* I2C, EE14Lib_Pin SCL, EE14Lib_Pin SDA, int output[3]);
+void gyro_read(I2C_TypeDef* I2C, int output[3]);
 void gyro_calibrate(const int samples);
+void accel_read(I2C_TypeDef* I2C, int output[3]);
 #endif

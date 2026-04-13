@@ -23,7 +23,7 @@ void mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA) {
 
 }
 
-void mpu_read(I2C_TypeDef* I2C, EE14Lib_Pin SCL, EE14Lib_Pin SDA, int output[3]) {
+void gyro_read(I2C_TypeDef* I2C, int output[3]) {
 
     static uint8_t reading[6];
 
@@ -69,4 +69,20 @@ void gyro_calibrate(const int samples) {
     gyro_offset[0] = sum_x / samples;
     gyro_offset[1] = sum_y / samples;
     gyro_offset[2] = sum_z / samples;
+}
+
+void accel_read(I2C_TypeDef* I2C, int output[3]) {
+    uint8_t ACCEL_ADDRESS = 0x3B;
+    uint8_t reading[6];
+
+    i2c_write(I2C, MPU_ADDRESS, &ACCEL_ADDRESS, 1);
+    i2c_read(I2C, MPU_ADDRESS, reading, 6);
+
+    int16_t ax = (reading[0] << 8) | reading[1];
+    int16_t ay = (reading[2] << 8) | reading[3];
+    int16_t az = (reading[4] << 8) | reading[5];
+
+    output[0] = ax;
+    output[1] = ay;
+    output[2] = az;
 }
