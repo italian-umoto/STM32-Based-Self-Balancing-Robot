@@ -57,6 +57,10 @@ void gpio_write(EE14Lib_Pin pin, bool value);
 bool gpio_read(EE14Lib_Pin pin);
 
 
+EE14Lib_Err timer_config_pwm(TIM_TypeDef* const timer, const unsigned int freq_hz);
+EE14Lib_Err timer_config_channel_pwm(TIM_TypeDef* const timer, const EE14Lib_Pin pin, const unsigned int duty);
+EE14Lib_Err configure_servo(TIM_TypeDef* const timer, const EE14Lib_Pin pin);
+EE14Lib_Err set_servo(TIM_TypeDef* const timer, const EE14Lib_Pin pin, float degrees);
 
 // Initialize the serial port (UART)
 void host_serial_init(const unsigned int baud);
@@ -77,3 +81,12 @@ bool i2c_read(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* dat
 int mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA, int MPU_ADDRESS);
 void mpu_read(I2C_TypeDef* I2C, EE14Lib_Pin SCL, EE14Lib_Pin SDA, int MPU_ADDRESS, int output[3]);
 #endif
+
+
+// Motor Helper Functions
+EE14Lib_Err motor_config();
+EE14Lib_Err forward(int speed);
+EE14Lib_Err backward(int speed);
+EE14Lib_Err turn_left(int speed);
+EE14Lib_Err turn_left(int speed);
+EE14Lib_Err move(int16_t linear_velocity, int16_t angular_velocity);
