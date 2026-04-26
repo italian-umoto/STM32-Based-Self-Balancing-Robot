@@ -103,9 +103,15 @@ float accel_angle_deg(I2C_TypeDef* I2C, int dimension1, int dimension2) {
 }
 
 // Print float without %f
-void print_degree_usart(float value) {
-    int whole = (int)value;
-    int frac = (int)((value - whole) * 100);
-    if (frac < 0) frac = -frac;
-    printf("%d.%02d\n", whole, frac);
+void print_data_usart(float theta, float state) {
+
+    int whole_theta = (int)theta;
+    int frac_theta = (int)((theta - whole_theta) * 100);
+    if (frac_theta < 0) frac_theta = -frac_theta;
+
+    int whole_state = (int)state;
+    int frac_state = (int)((state - whole_state) * 100);
+    if (frac_state < 0) frac_state = -frac_state;
+
+    printf("%d.%02d %d.%02d\n", whole_theta, frac_theta, whole_state, frac_state);
 }
