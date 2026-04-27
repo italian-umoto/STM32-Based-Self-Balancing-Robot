@@ -92,13 +92,7 @@ bool i2c_write(I2C_TypeDef* i2c, unsigned char device_address, unsigned char* da
         //if(i2c->ISR & I2C_ISR_NACKF){
         //    break;
         //}
-        while(!(i2c->ISR & I2C_ISR_TXIS)) {
-            //if(i2c->ISR & I2C_ISR_ARLO){
-            //    i2c->ICR = I2C_ICR_ARLOCF;
-            //    return false; // Try to get out
-            //}
-
-        } // Wait until it's ready for the next byte
+        while(!(i2c->ISR & I2C_ISR_TXIS)) {} // Wait until it's ready for the next byte
         i2c->TXDR = data[i]; // TXIS is cleared when we write the next byte
     }
 

@@ -7,10 +7,10 @@
 //  pin: Silkscreen of the pin on the Nucleo to use (ex D9)
 // Returns EE14Lib_Err_OK on success
 
-#define FORWARD_LEFT A1
-#define FORWARD_RIGHT A7
-#define BACKWARD_LEFT A2
-#define BACKWARD_RIGHT A4
+#define FORWARD_LEFT D13
+#define FORWARD_RIGHT A1
+#define BACKWARD_LEFT A4
+#define BACKWARD_RIGHT A2
 
 
 EE14Lib_Err motor_config(){
@@ -24,23 +24,39 @@ EE14Lib_Err motor_config(){
 
 EE14Lib_Err forward(int speed){
     // Ensure we are moving to a valid position
-    if(speed >= 300 && speed < 1024){
+    timer_config_channel_pwm(TIM2, BACKWARD_LEFT, 0); 
+    timer_config_channel_pwm(TIM2, BACKWARD_RIGHT, 0); 
+
+    if(speed >= 100 && speed < 1024){
         timer_config_channel_pwm(TIM2, FORWARD_LEFT, speed);  
         timer_config_channel_pwm(TIM2, FORWARD_RIGHT, speed); 
-        timer_config_channel_pwm(TIM2, BACKWARD_LEFT, 0); 
-        timer_config_channel_pwm(TIM2, BACKWARD_RIGHT, 0); 
+    } else if (speed >= 1024){
+        timer_config_channel_pwm(TIM2, FORWARD_LEFT, 1023);  
+        timer_config_channel_pwm(TIM2, FORWARD_RIGHT, 1023); 
     }
     return EE14Lib_Err_OK;
 }
 
 EE14Lib_Err backward(int speed){
     // Ensure we are moving to a valid position
-    if(speed >= 300 && speed < 1024){
+    timer_config_channel_pwm(TIM2, FORWARD_LEFT, 0); 
+    timer_config_channel_pwm(TIM2, FORWARD_RIGHT, 0); 
+    if(speed >= 100 && speed < 1024){
         timer_config_channel_pwm(TIM2, BACKWARD_LEFT, speed);  
         timer_config_channel_pwm(TIM2, BACKWARD_RIGHT, speed); 
+    }
+    else if(speed >= 1024){
+        timer_config_channel_pwm(TIM2, BACKWARD_LEFT, 1023);  
+        timer_config_channel_pwm(TIM2, BACKWARD_RIGHT, 1023);   
+    }
+    return EE14Lib_Err_OK;
+}
+
+EE14Lib_Err stop(){
+        timer_config_channel_pwm(TIM2, BACKWARD_LEFT, 0);  
+        timer_config_channel_pwm(TIM2, BACKWARD_RIGHT, 0); 
         timer_config_channel_pwm(TIM2, FORWARD_LEFT, 0); 
         timer_config_channel_pwm(TIM2, FORWARD_RIGHT, 0); 
-    }
     return EE14Lib_Err_OK;
 }
 
@@ -116,3 +132,9 @@ EE14Lib_Err move(int16_t linear_velocity, int16_t angular_velocity){
     }
 }
 
+// Helper to clamp an int between min and max
+static int clamp(int val, int min, int max) {
+    if (val < min) return min;
+    if (val > max) return max;
+    return val;
+}
