@@ -18,7 +18,7 @@ EE14Lib_Err motor_config(){
     gpio_config_alternate_function(FORWARD_RIGHT, 1);
     gpio_config_alternate_function(BACKWARD_LEFT, 1);
     gpio_config_alternate_function(BACKWARD_RIGHT, 1);
-    timer_config_pwm(TIM2, 50);
+    timer_config_pwm(TIM2, 300);
     return EE14Lib_Err_OK;
 }
 
@@ -130,11 +130,4 @@ EE14Lib_Err move(int16_t linear_velocity, int16_t angular_velocity){
         timer_config_channel_pwm(TIM2, FORWARD_RIGHT, 0);  
         timer_config_channel_pwm(TIM2, BACKWARD_RIGHT, F2); 
     }
-}
-
-// Helper to clamp an int between min and max
-static int clamp(int val, int min, int max) {
-    if (val < min) return min;
-    if (val > max) return max;
-    return val;
 }

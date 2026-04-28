@@ -12,10 +12,10 @@ EE14Lib_Pin Test = D6;
 volatile uint32_t SysTick_Triggered = 0;
 
 // PID Parameters
-const float KI = 0;
-const float KP = -15; 
-const float KD = -12;
-const float bal_theta = 0.6;
+const float KI = 0;//0                              // 0
+const float KP = -15; //-15                         // -15
+const float KD = -12; //-12                       // -16.7
+const float bal_theta = 0;                        // 0.6
 
 float error = 0;
 float past_error = 0;
@@ -23,7 +23,7 @@ float PWM_setpoint = 0;
 float last_error = 0;
 
 // Complementary filter gain
-static float alpha = 0.75f;
+static float alpha = 0.95f;
 
 // Function Prototype
 float complementary_update(float old_theta, float gyro_rate, float accel_angle, float dt_s);
@@ -37,12 +37,13 @@ int main() {
     gpio_config_mode(Test, OUTPUT);
 
     // Initial angle from accelerometer
-    float actual_theta = accel_angle_deg(I2C1, 0, 2);
+    float actual_theta = accel_angle_deg(I2C1, 1, 2);
 
-    // Snapshot the tick counter before entering the loop
-    uint32_t last_tick = SysTick_Triggered;
+    float dt_ms = 10;
+    float dt_s = dt_ms / 1e3f;
 
     while (1) {
+        uint32_t loop_start = SysTick_Triggered;
 
         gpio_write(Test,0);
         // --- Sensor reads ---
@@ -50,25 +51,19 @@ int main() {
         float accl_angle = accel_angle_deg(I2C1, 1, 2);
         gpio_write(Test,1);
 
-
-        // Measure dt as time between this sample and the last
-        uint32_t current_tick = SysTick_Triggered;
-        float dt_s = (current_tick - last_tick) * 1e-5f;
-        last_tick = current_tick;
         actual_theta = complementary_update(actual_theta, gyro_omega, accl_angle, dt_s);
 
         // --- PID ---
         error = actual_theta - bal_theta;
-        past_error = past_error + error;
+        past_error = past_error + error*dt_s;
 
         PWM_setpoint = KP * error + KD * gyro_omega + KI * past_error;
 
+        print_data_usart(actual_theta, PWM_setpoint);
 
-        // print_data_usart(actual_theta, PWM_setpoint);
-
-        if (error > 0){
+        if (error > 2){
             backward(-10*PWM_setpoint+130);
-        } else if(error < 0) {
+        } else if(error < -2) {
             forward(10*PWM_setpoint+130);
         } 
         else {
@@ -76,27 +71,10 @@ int main() {
             stop();
         }
 
-        // if (actual_theta > 1 || actual_theta < -1) {
-        //     int raw_speed = 300 + (int)(10 * fabsf(PWM_setpoint));
-        //     int speed = clamp(raw_speed, 300, 1023);
-
-        //     if (PWM_setpoint > 0) {
-        //         forward(speed);
-        //     } else if (PWM_setpoint < 0) {
-        //         backward(speed);
-        //     }
-        // } else {
-        //     stop();
-        // }
-
-
-        last_error = error;
-
-
+        while (SysTick_Triggered - loop_start < (uint32_t)(dt_ms*1e2f)) {}
     }
 
 
-    
 }
 
 float complementary_update(float old_theta, float gyro_rate, float accel_angle, float dt_s) {
