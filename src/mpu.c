@@ -21,7 +21,7 @@ void mpu_init(EE14Lib_Pin SCL, EE14Lib_Pin SDA) {
     buf[1] = 0b00 << 3;
     i2c_write(I2C1, MPU_ADDRESS, buf, 2);
 
-    // gyro_calibrate(500);
+    gyro_calibrate(500);
 
 }
 
