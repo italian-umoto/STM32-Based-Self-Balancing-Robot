@@ -11,16 +11,16 @@ EE14Lib_Pin Test = D6;
 
 volatile uint32_t SysTick_Triggered = 0;
 
-// PID Parameters
-const float KI = 0;
-const float KP = -15; 
-const float KD = -12;
-const float bal_theta = 0.6;
-
 // Motor limits
 #define PWM_MIN 130
 #define PWM_MAX 1023
 #define ERROR_DEADBAND 1.0f
+
+// PID Parameters
+const float KI = -10;//-10
+const float KP = -200;//-200 
+const float KD = -25;//-25
+const float bal_theta = 0;
 
 float error = 0;
 float past_error = 0;
@@ -66,22 +66,20 @@ int main() {
 
         // --- PID ---
         error = actual_theta - bal_theta;
-
-        // Integrate error correctly using dt
         past_error = past_error + error * dt_s;
-
-        // PID output is a signed motor command
         PWM_setpoint = KP * error + KD * gyro_omega + KI * past_error;
 
         // print_data_usart(actual_theta, PWM_setpoint);
 
         // --- Motor command mapping ---
         if (fabs(error) < ERROR_DEADBAND) {
+            // If we are in a region that is slightly off the balancing point, stop
             past_error = 0;
             stop();
         } 
         else {
-            int duty = (int)fabs(PWM_setpoint);
+            // Take the absolute value of PWM_setpoint for PWM magnitude
+            int duty = (int)fabs(PWM_setpoint); 
 
             // Clamp to maximum PWM
             if (duty > PWM_MAX) {
@@ -95,10 +93,10 @@ int main() {
 
             // Use PID sign to decide direction
             if (PWM_setpoint > 0) {
-                forward(duty);
+                forward(duty+300);
             } 
             else {
-                backward(duty);
+                backward(duty+300);
             }
         }
 
@@ -107,8 +105,7 @@ int main() {
 }
 
 float complementary_update(float old_theta, float gyro_rate, float accel_angle, float dt_s) {
-    return alpha * (old_theta + gyro_rate * dt_s)
-         + (1.0f - alpha) * accel_angle;
+    return alpha * (old_theta + gyro_rate * dt_s) + (1.0f - alpha) * accel_angle;
 }
 
 // Setup 10us delay
