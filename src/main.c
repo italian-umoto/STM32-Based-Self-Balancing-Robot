@@ -17,10 +17,10 @@ volatile uint32_t SysTick_Triggered = 0;
 #define ERROR_DEADBAND 1.0f
 
 // PID Parameters
-const float KI = -10;//-10
-const float KP = -200;//-200 
-const float KD = -25;//-25
-const float bal_theta = 0;
+const float KI = -55;//-10
+const float KP = -350;//-200 
+const float KD = -40;//-25
+const float bal_theta = -0.3;
 
 float error = 0;
 float past_error = 0;
@@ -39,7 +39,7 @@ int main() {
     mpu_init(MPU_SCL, MPU_SDA);
     motor_config();
 
-    gpio_config_mode(Test, OUTPUT);
+    // gpio_config_mode(Test, OUTPUT);
 
     // Initial angle from accelerometer
     float actual_theta = accel_angle_deg(I2C1, 1, 2);
@@ -49,13 +49,13 @@ int main() {
 
     while (1) {
 
-        gpio_write(Test, 0);
+        // gpio_write(Test, 0);
 
         // --- Sensor reads ---
         float gyro_omega = gyro_rate_dps(I2C1, 0);
         float accl_angle = accel_angle_deg(I2C1, 1, 2);
 
-        gpio_write(Test, 1);
+        // gpio_write(Test, 1);
 
         // Measure dt as time between this sample and the last
         uint32_t current_tick = SysTick_Triggered;

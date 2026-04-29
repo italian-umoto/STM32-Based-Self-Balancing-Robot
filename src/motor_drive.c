@@ -1,10 +1,10 @@
 //* motor_drive.c
 #include "ee14lib.h"
 
-#define FORWARD_LEFT D13
-#define FORWARD_RIGHT A1
-#define BACKWARD_LEFT A4
-#define BACKWARD_RIGHT A2
+#define FORWARD_LEFT D13  // 
+#define FORWARD_RIGHT A1  // 
+#define BACKWARD_LEFT A4  // Red
+#define BACKWARD_RIGHT A2 // Brown
 
 #define PWM_MAX 1023
 
